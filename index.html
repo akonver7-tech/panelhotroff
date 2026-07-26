@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PANEL IOS V1 - Ocean Cyberpunk</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #020813;
+            --panel-bg: rgba(6, 15, 30, 0.85);
+            --panel-border: rgba(0, 240, 255, 0.3);
+            --primary-color: #00f0ff;
+            --primary-glow: rgba(0, 240, 255, 0.5);
+            --secondary-color: #0066ff;
+            --text-main: #f0f4f8;
+            --text-muted: #829ab1;
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Rajdhani', sans-serif;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* --- CIRCULAR LOADING SCREEN --- */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at center, #06182c 0%, #02060d 100%);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+        #loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .circular-loader-box {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .circular-ring {
+            position: absolute;
+            inset: 0;
+            border: 4px solid rgba(0, 240, 255, 0.1);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spinRing 1.2s linear infinite;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+        @keyframes spinRing {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .circular-text {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.1rem;
+            color: var(--primary-color);
+        }
+        .loader-title {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.5rem;
+            color: #fff;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        /* --- KEY LOGIN OVERLAY --- */
+        #key-screen {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 8, 19, 0.95);
+            backdrop-filter: blur(20px);
+            z-index: 9998;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: 0.5s ease;
+        }
+        #key-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .key-box {
+            background: rgba(10, 25, 45, 0.9);
+            border: 1px solid var(--primary-color);
+            width: 100%;
+            max-width: 380px;
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: 0 0 40px var(--primary-glow);
+            text-align: center;
+        }
+        .key-input {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            padding: 12px 16px;
+            border-radius: 10px;
+            color: #fff;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1rem;
+            margin: 15px 0;
+            outline: none;
+            text-align: center;
+            transition: var(--transition-smooth);
+        }
+        .key-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        /* --- 4K SNOW / PARTICLE CANVAS --- */
+        #particles-canvas {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* --- MAIN APP CONTAINER --- */
+        .app-container {
+            position: relative;
+            z-index: 10;
+            width: 100vw;
+            height: 100vh;
+            max-width: 1440px;
+            max-height: 900px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid var(--panel-border);
+            border-radius: 0px;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 240, 255, 0.15);
+            display: flex;
+            overflow: hidden;
+        }
+
+        @media(min-width: 901px) {
+            .app-container {
+                width: 95vw;
+                height: 90vh;
+                border-radius: 20px;
+            }
+        }
+
+        /* RGB Border Glow Frame */
+        .app-container::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: inherit;
+            background: linear-gradient(45deg, var(--primary-color), transparent, var(--secondary-color), transparent);
+            z-index: -1;
+            opacity: 0.5;
+            animation: rgbBorder 6s linear infinite;
+        }
+        @keyframes rgbBorder {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        /* --- SIDEBAR MENU --- */
+        .sidebar {
+            width: 80px;
+            background: rgba(4, 11, 22, 0.9);
+            border-right: 1px solid rgba(0, 240, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 16px 8px;
+            z-index: 5;
+            transition: var(--transition-smooth);
+        }
+
+        @media(min-width: 901px) {
+            .sidebar {
+                width: 240px;
+                padding: 20px 14px;
+            }
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding-bottom: 18px;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+        }
+        @media(min-width: 901px) {
+            .sidebar-brand {
+                justify-content: flex-start;
+                padding: 0 10px 18px 10px;
+            }
+        }
+
+        .brand-logo-svg {
+            width: 32px;
+            height: 32px;
+            fill: var(--primary-color);
+            filter: drop-shadow(0 0 10px var(--primary-glow));
+            flex-shrink: 0;
+        }
+        .brand-title {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            color: #fff;
+            display: none;
+        }
+        .brand-title span {
+            color: var(--primary-color);
+        }
+        @media(min-width: 901px) {
+            .brand-title { display: block; }
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 15px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        .sidebar-menu::-webkit-scrollbar { display: none; }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            font-weight: 600;
+            font-size: 0.95rem;
+            position: relative;
+        }
+        @media(min-width: 901px) {
+            .menu-item {
+                justify-content: flex-start;
+                padding: 11px 14px;
+            }
+        }
+        .menu-item span { display: none; }
+        @media(min-width: 901px) {
+            .menu-item span { display: inline; }
+        }
+        .menu-item i {
+            font-size: 1.2rem;
+            width: 24px;
+            text-align: center;
+        }
+        .menu-item:hover {
+            color: var(--text-main);
+            background: rgba(0, 240, 255, 0.1);
+        }
+        .menu-item.active {
+            color: #fff;
+            background: linear-gradient(90deg, rgba(0, 240, 255, 0.25), rgba(0, 240, 255, 0.02));
+            border-left: 3px solid var(--primary-color);
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.2);
+        }
+
+        .sidebar-footer {
+            padding-top: 12px;
+            border-top: 1px solid rgba(0, 240, 255, 0.1);
+        }
+        .user-mini-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 6px;
+        }
+        @media(min-width: 901px) {
+            .user-mini-card {
+                justify-content: flex-start;
+                padding: 8px;
+                background: rgba(0, 240, 255, 0.03);
+                border-radius: 10px;
+            }
+        }
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #081b33, #020813);
+            border: 2px solid var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+            font-size: 1rem;
+            box-shadow: 0 0 10px var(--primary-glow);
+            flex-shrink: 0;
+        }
+        .user-info { display: none; }
+        @media(min-width: 901px) {
+            .user-info { display: block; }
+        }
+        .user-info h4 {
+            font-size: 0.9rem;
+            color: var(--text-main);
+        }
+        .user-info span {
+            font-size: 0.7rem;
+            color: var(--primary-color);
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* --- MAIN CONTENT AREA --- */
+        .main-content-area {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: radial-gradient(circle at top right, rgba(0, 240, 255, 0.04), transparent 60%);
+        }
+
+        .top-header {
+            height: 60px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+            background: rgba(4, 11, 22, 0.5);
+        }
+        @media(min-width: 901px) {
+            .top-header { height: 70px; padding: 0 30px; }
+        }
+        .header-title h2 {
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+            font-weight: 700;
+            color: #fff;
+        }
+        @media(min-width: 901px) {
+            .header-title h2 { font-size: 1.4rem; }
+        }
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .action-btn {
+            background: rgba(0, 240, 255, 0.05);
+            border: 1px solid rgba(0, 240, 255, 0.15);
+            color: var(--text-main);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+        @media(min-width: 901px) {
+            .action-btn { width: 40px; height: 40px; border-radius: 10px; }
+        }
+        .action-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .viewport {
+            flex-grow: 1;
+            padding: 16px;
+            overflow-y: auto;
+            position: relative;
+        }
+        @media(min-width: 901px) {
+            .viewport { padding: 24px 30px; }
+        }
+        .viewport::-webkit-scrollbar { width: 5px; }
+        .viewport::-webkit-scrollbar-thumb {
+            background: rgba(0, 240, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .tab-pane {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .tab-pane.active {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        @media(min-width: 901px) {
+            .dashboard-grid { grid-template-columns: repeat(12, 1fr); gap: 20px; }
+        }
+
+        .cyber-card {
+            background: rgba(10, 22, 40, 0.75);
+            border: 1px solid rgba(0, 240, 255, 0.12);
+            border-radius: 14px;
+            padding: 16px;
+            backdrop-filter: blur(12px);
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-smooth);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+        @media(min-width: 901px) {
+            .cyber-card { padding: 20px; border-radius: 16px; }
+        }
+        .cyber-card:hover {
+            border-color: rgba(0, 240, 255, 0.4);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 15px rgba(0, 240, 255, 0.1);
+        }
+
+        .col-span-4 { grid-column: span 12; }
+        .col-span-8 { grid-column: span 12; }
+        .col-span-6 { grid-column: span 12; }
+        .col-span-12 { grid-column: span 12; }
+
+        @media(min-width: 901px) {
+            .col-span-4 { grid-column: span 4; }
+            .col-span-8 { grid-column: span 8; }
+            .col-span-6 { grid-column: span 6; }
+            .col-span-12 { grid-column: span 12; }
+        }
+
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #fff;
+        }
+        @media(min-width: 901px) {
+            .card-title { font-size: 1.1rem; margin-bottom: 14px; }
+        }
+        .card-title i { color: var(--primary-color); }
+
+        .stat-bar-group { margin-bottom: 12px; }
+        .stat-bar-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--text-main);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 7px;
+            background: rgba(0, 240, 255, 0.08);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 4px;
+            box-shadow: 0 0 10px var(--primary-glow);
+            transition: width 1s ease;
+        }
+
+        .cyber-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: #020813;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: var(--transition-smooth);
+            box-shadow: 0 4px 15px var(--primary-glow);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .cyber-btn:hover {
+            filter: brightness(1.15);
+            box-shadow: 0 6px 20px rgba(0, 240, 255, 0.8);
+        }
+
+        .control-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        @media(min-width: 600px) {
+            .control-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        }
+        .control-box {
+            background: rgba(0, 240, 255, 0.02);
+            border: 1px solid rgba(0, 240, 255, 0.08);
+            padding: 12px 14px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.95rem;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 22px;
+            flex-shrink: 0;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .3s;
+            border-radius: 22px;
+            border: 1px solid rgba(0, 240, 255, 0.2);
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+        input:checked + .slider:before {
+            transform: translateX(22px);
+            background-color: #020813;
+        }
+
+        #toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 90vw;
+        }
+        .toast {
+            background: rgba(6, 18, 32, 0.95);
+            border-left: 4px solid var(--primary-color);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            padding: 12px 16px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+            animation: toastIn 0.3s ease forwards;
+        }
+        @keyframes toastIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- CIRCULAR LOADING SCREEN -->
+    <div id="loading-screen">
+        <div class="circular-loader-box">
+            <div class="circular-ring"></div>
+            <div class="circular-text" id="loadPercent">0%</div>
+        </div>
+        <div class="loader-title">PANEL IOS V1</div>
+    </div>
+
+    <!-- KEY LOGIN SCREEN -->
+    <div id="key-screen" class="hidden">
+        <div class="key-box">
+            <h3 class="card-title" style="justify-content: center; margin-bottom: 5px;">XÁC THỰC MÃ KHOÁ <i class="fa-solid fa-key"></i></h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Nhập Key<b style="color: var(--primary-color);"></b> để tiếp tục</p>
+            <input type="password" id="panelKeyInput" class="key-input" placeholder="Nhập Key hệ thống...">
+            <button class="cyber-btn" style="width: 100%;" onclick="verifyKey()">KÍCH HOẠT PANEL</button>
+        </div>
+    </div>
+
+    <!-- 4K SNOW / PARTICLE CANVAS BACKGROUND -->
+    <canvas id="particles-canvas"></canvas>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div class="app-container">
+        
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div>
+                <div class="sidebar-brand">
+                    <svg class="brand-logo-svg" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                    </svg>
+                    <div class="brand-title">IOS <span>V1</span></div>
+                </div>
+                <div class="sidebar-menu">
+                    <div class="menu-item active" onclick="switchTab('dashboard', this)">
+                        <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
+                    </div>
+                    <div class="menu-item" onclick="switchTab('account', this)">
+                        <i class="fa-solid fa-user-gear"></i><span>Account</span>
+                    </div>
+                    <div class="menu-item" onclick="switchTab('visuals', this)">
+                        <i class="fa-solid fa-palette"></i><span>Visuals</span>
+                    </div>
+                    <div class="menu-item" onclick="switchTab('statistics', this)">
+                        <i class="fa-solid fa-chart-line"></i><span>Statistics</span>
+                    </div>
+                    <div class="menu-item" onclick="switchTab('performance', this)">
+                        <i class="fa-solid fa-gauge-high"></i><span>Performance</span>
+                    </div>
+                    <div class="menu-item" onclick="switchTab('themes', this)">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i><span>Themes</span>
+                    </div>
+                    <div class="menu-item" onclick="switchTab('settings', this)">
+                        <i class="fa-solid fa-gear"></i><span>Settings</span>
+                    </div>
+                </div>
+            </div>
+            <div class="sidebar-footer">
+                <div class="user-mini-card">
+                    <div class="user-avatar">
+                        <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="user-info">
+                        <h4>Ocean User</h4>
+                        <span>ONLINE // V1</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="main-content-area">
+            
+            <!-- TOP HEADER -->
+            <div class="top-header">
+                <div class="header-title">
+                    <h2 id="current-tab-title">DASHBOARD OVERVIEW</h2>
+                </div>
+                <div class="header-actions">
+                    <button class="action-btn" title="Làm mới" onclick="showToast('Đã làm mới dữ liệu hệ thống đại dương!')"><i class="fa-solid fa-rotate"></i></button>
+                </div>
+            </div>
+
+            <!-- VIEWPORT -->
+            <div class="viewport">
+                
+                <!-- 1. DASHBOARD -->
+                <div class="tab-pane active" id="tab-dashboard">
+                    <div class="dashboard-grid">
+                        <div class="cyber-card col-span-8">
+                            <div class="card-title">Trạng thái Lõi Đại Dương <i class="fa-solid fa-water"></i></div>
+                            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">Hệ thống tản nhiệt nước và các cảm biến sinh trắc học đang hoạt động ổn định.</p>
+                            <div class="stat-bar-group">
+                                <div class="stat-bar-info"><span>OCEAN CORE LOAD</span><span>28%</span></div>
+                                <div class="progress-bar"><div class="progress-fill" style="width: 28%;"></div></div>
+                            </div>
+                            <div class="stat-bar-group">
+                                <div class="stat-bar-info"><span>SONAR RENDERING</span><span>52%</span></div>
+                                <div class="progress-bar"><div class="progress-fill" style="width: 52%;"></div></div>
+                            </div>
+                            <div class="stat-bar-group">
+                                <div class="stat-bar-info"><span>MEMORY CAPACITY</span><span>2.8 / 8.0 GB</span></div>
+                                <div class="progress-bar"><div class="progress-fill" style="width: 35%;"></div></div>
+                            </div>
+                        </div>
+
+                        <div class="cyber-card col-span-4">
+                            <div class="card-title">Thao tác Nhanh <i class="fa-solid fa-bolt"></i></div>
+                            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                                <button class="cyber-btn" onclick="showToast('Đã tối ưu hóa bộ nhớ RAM!')">
+                                    <i class="fa-solid fa-broom"></i> Tối ưu RAM
+                                </button>
+                                <button class="cyber-btn" style="background: rgba(0,240,255,0.05); border: 1px solid var(--primary-color); color: #fff;" onclick="showToast('Đã quét toàn bộ hệ thống bảo mật!')">
+                                    <i class="fa-solid fa-shield"></i> Quét Hệ Thống
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. ACCOUNT -->
+                <div class="tab-pane" id="tab-account">
+                    <div class="dashboard-grid">
+                        <div class="cyber-card col-span-6">
+                            <div class="card-title">Thông tin Tài khoản <i class="fa-solid fa-id-card"></i></div>
+                            <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+                                <div style="width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--primary-color); display: flex; align-items: center; justify-content: center; background: rgba(0,240,255,0.1); color: var(--primary-color); font-size: 1.5rem;">
+                                    <i class="fa-solid fa-user-astronaut"></i>
+                                </div>
+                                <div>
+                                    <h3 style="font-size: 1.1rem; color: #fff;">PANEL IOS V1</h3>
+                                    <p style="color: var(--primary-color); font-family: 'Share Tech Mono'; font-size: 0.85rem;">ID: #OCEAN-FF-PRO</p>
+                                </div>
+                            </div>
+                            <button class="cyber-btn" onclick="showToast('Đã lưu thông tin tài khoản!')">Cập nhật Hồ sơ</button>
+                        </div>
+                        <div class="cyber-card col-span-6">
+                            <div class="card-title">Bảo mật <i class="fa-solid fa-shield-halved"></i></div>
+                            <div class="control-grid" style="grid-template-columns: 1fr; gap: 8px;">
+                                <div class="control-box">
+                                    <span>Xác thực Key 2FA</span>
+                                    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                                </div>
+                                <div class="control-box">
+                                    <span>Mã hóa Đường truyền</span>
+                                    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. VISUALS -->
+                <div class="tab-pane" id="tab-visuals">
+                    <div class="dashboard-grid">
+                        <div class="cyber-card col-span-12">
+                            <div class="card-title">Cấu hình Giao diện & Hiệu ứng <i class="fa-solid fa-wand-magic"></i></div>
+                            <div class="control-grid">
+                                <div class="control-box">
+                                    <span>Hiệu ứng Glassmorphism</span>
+                                    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                                </div>
+                                <div class="control-box">
+                                    <span>Tuyết rơi 4K (Snow FX)</span>
+                                    <label class="switch"><input type="checkbox" checked id="snowToggle" onchange="toggleSnow(this)"><span class="slider"></span></label>
+                                </div>
+                                <div class="control-box">
+                                    <span>RGB Border Glow</span>
+                                    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                                </div>
+                                <div class="control-box">
+                                    <span>Sóng Đại Dương Động</span>
+                                    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. STATISTICS -->
+                <div class="tab-pane" id="tab-statistics">
+                    <div class="dashboard-grid">
+                        <div class="cyber-card col-span-12">
+                            <div class="card-title">Lưu lượng Mạng Tuần <i class="fa-solid fa-chart-line"></i></div>
+                            <div style="height: 160px; display: flex; align-items: flex-end; gap: 10px; padding-top: 15px; border-bottom: 1px solid rgba(0,240,255,0.1);">
+                                <div style="flex:1; background: linear-gradient(to top, var(--primary-color), rgba(0,240,255,0.1)); height: 45%; border-radius: 3px 3px 0 0;"></div>
+                                <div style="flex:1; background: linear-gradient(to top, var(--primary-color), rgba(0,240,255,0.1)); height: 70%; border-radius: 3px 3px 0 0;"></div>
+                                <div style="flex:1; background: linear-gradient(to top, var(--primary-color), rgba(0,240,255,0.1)); height: 55%; border-radius: 3px 3px 0 0;"></div>
+                                <div style="flex:1; background: linear-gradient(to top, var(--primary-color), rgba(0,240,255,0.1)); height: 85%; border-radius: 3px 3px 0 0;"></div>
+                                <div style="flex:1; background: linear-gradient(to top, var(--primary-color), rgba(0,240,255,0.1)); height: 75%; border-radius: 3px 3px 0 0;"></div>
+                                <div style="flex:1; background: linear-gradient(to top, var(--primary-color), rgba(0,240,255,0.1)); height: 90%; border-radius: 3px 3px 0 0;"></div>
+                                <div style="flex:1; background: linear-gradient(to top, var(--primary-color), rgba(0,240,255,0.1)); height: 100%; border-radius: 3px 3px 0 0;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5. PERFORMANCE -->
+                <div class="tab-pane" id="tab-performance">
+                    <div class="dashboard-grid">
+                        <div class="cyber-card col-span-6">
+                            <div class="card-title">Tốc độ Khung Hình (FPS) <i class="fa-solid fa-gauge"></i></div>
+                            <div style="font-size: 2.5rem; font-family: 'Share Tech Mono'; color: var(--primary-color); text-shadow: 0 0 15px var(--primary-glow); margin: 15px 0;">120.0 FPS</div>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Độ trễ mạng: <b>0.6ms</b></p>
+                        </div>
+                        <div class="cyber-card col-span-6">
+                            <div class="card-title">Bộ nhớ Cache <i class="fa-solid fa-memory"></i></div>
+                            <div class="stat-bar-group" style="margin-top: 15px;">
+                                <div class="stat-bar-info"><span>CACHE USAGE</span><span>1.0 / 4.0 GB</span></div>
+                                <div class="progress-bar"><div class="progress-fill" style="width: 25%;"></div></div>
+                            </div>
+                            <button class="cyber-btn" style="margin-top: 10px;" onclick="showToast('Đã xóa sạch bộ nhớ cache!')">Làm sạch ngay</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. THEMES -->
+                <div class="tab-pane" id="tab-themes">
+                    <div class="dashboard-grid">
+                        <div class="cyber-card col-span-4" style="border-color: var(--primary-color);">
+                            <div class="card-title">Ocean Deep Blue <i class="fa-solid fa-check"></i></div>
+                            <p style="color: var(--text-muted); font-size: 0.85rem;">Tông màu đại dương sâu thẳm chủ đạo.</p>
+                        </div>
+                        <div class="cyber-card col-span-4" onclick="showToast('Đã chọn chủ đề Cyberpunk Orange!')" style="cursor: pointer;">
+                            <div class="card-title">Cyberpunk Orange <i class="fa-solid fa-palette"></i></div>
+                            <p style="color: var(--text-muted); font-size: 0.85rem;">Sắc cam rực rỡ phong cách tương lai.</p>
+                        </div>
+                        <div class="cyber-card col-span-4" onclick="showToast('Đã chọn chủ đề Matrix Green!')" style="cursor: pointer;">
+                            <div class="card-title">Matrix Green <i class="fa-solid fa-palette"></i></div>
+                            <p style="color: var(--text-muted); font-size: 0.85rem;">Mã nguồn xanh lá đặc trưng.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 7. SETTINGS -->
+                <div class="tab-pane" id="tab-settings">
+                    <div class="dashboard-grid">
+                        <div class="cyber-card col-span-12">
+                            <div class="card-title">Cấu hình Hệ thống <i class="fa-solid fa-gears"></i></div>
+                            <div class="control-grid">
+                                <div class="control-box">
+                                    <span>Khởi động cùng hệ thống</span>
+                                    <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                                </div>
+                                <div class="control-box">
+                                    <span>Hiệu ứng âm thanh</span>
+                                    <label class="switch"><input type="checkbox"><span class="slider"></span></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // 1. Circular Loading Animation Simulation
+        window.addEventListener('load', () => {
+            let progress = 0;
+            const percentText = document.getElementById('loadPercent');
+            const screen = document.getElementById('loading-screen');
+            const keyScreen = document.getElementById('key-screen');
+
+            const interval = setInterval(() => {
+                progress += Math.floor(Math.random() * 12) + 6;
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        screen.classList.add('hidden');
+                        // Hiển thị màn hình nhập Key sau khi loading xong
+                        keyScreen.classList.remove('hidden');
+                    }, 400);
+                }
+                percentText.innerText = progress + '%';
+            }, 100);
+        });
+
+        // 2. Verify Key Function
+        function verifyKey() {
+            const inputVal = document.getElementById('panelKeyInput').value.trim();
+            const keyScreen = document.getElementById('key-screen');
+
+            if (inputVal === 'Key-PanelFF') {
+                showToast('Xác thực Key thành công! Chào mừng đến với PANEL IOS V1');
+                keyScreen.classList.add('hidden');
+            } else {
+                showToast('Key không chính xác! Vui lòng thử lại (Key-PanelFF)');
+                document.getElementById('panelKeyInput').style.borderColor = '#ff3333';
+                setTimeout(() => {
+                    document.getElementById('panelKeyInput').style.borderColor = 'var(--primary-color)';
+                }, 1000);
+            }
+        }
+
+        // 3. Tab Switcher Titles
+        const tabTitles = {
+            'dashboard': 'DASHBOARD OVERVIEW',
+            'account': 'ACCOUNT & PROFILE',
+            'visuals': 'VISUALS & SHADERS',
+            'statistics': 'SYSTEM STATISTICS',
+            'performance': 'PERFORMANCE METRICS',
+            'themes': 'THEME CUSTOMIZATION',
+            'settings': 'SYSTEM SETTINGS'
+        };
+
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+
+            document.getElementById('current-tab-title').innerText = tabTitles[tabId];
+        }
+
+        // 4. Toast Notifications
+        function showToast(message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = `<i class="fa-solid fa-circle-info" style="color: var(--primary-color);"></i><span>${message}</span>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // 5. 4K Snow / Particle Background Canvas Animation (Ocean Glow Snow)
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        let particlesArray = [];
+        const numberOfSnowflakes = 85;
+        let snowActive = true;
+
+        class Snowflake {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2.2 + 0.8;
+                this.speedY = Math.random() * 0.7 + 0.2;
+                this.speedX = (Math.random() - 0.5) * 0.4;
+                this.opacity = Math.random() * 0.7 + 0.2;
+            }
+            update() {
+                this.y += this.speedY;
+                this.x += this.speedX;
+
+                if (this.y > canvas.height) {
+                    this.y = 0;
+                    this.x = Math.random() * canvas.width;
+                }
+            }
+            draw() {
+                ctx.fillStyle = `rgba(0, 240, 255, ${this.opacity})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initSnow() {
+            particlesArray = [];
+            for (let i = 0; i < numberOfSnowflakes; i++) {
+                particlesArray.push(new Snowflake());
+            }
+        }
+        initSnow();
+
+        function animateSnow() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (snowActive) {
+                for (let i = 0; i < particlesArray.length; i++) {
+                    particlesArray[i].update();
+                    particlesArray[i].draw();
+                }
+            }
+            requestAnimationFrame(animateSnow);
+        }
+        animateSnow();
+
+        function toggleSnow(el) {
+            snowActive = el.checked;
+            showToast(snowActive ? 'Đã bật hiệu ứng tuyết rơi đại dương!' : 'Đã tắt hiệu ứng tuyết rơi!');
+        }
+    </script>
+</body>
+</html>
